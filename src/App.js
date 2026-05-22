@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { supabase } from './supabaseClient';
-import { Plus, Grid, Share2, ArrowLeft, Image as ImageIcon, Filter, CheckCircle } from 'lucide-react';
+import { Plus, Grid,ArrowLeft, Image as ImageIcon, Filter } from 'lucide-react';
 import SingleView from './singleView/SIngleView';
 
 export default function App() {

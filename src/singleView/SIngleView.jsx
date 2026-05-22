@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Link, useParams, useNavigate } from 'react-router-dom';
+import {Link, useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { Plus, Grid, Share2, ArrowLeft, Image as ImageIcon, Filter, CheckCircle } from 'lucide-react';
+import {  Share2, ArrowLeft, Image as ImageIcon, CheckCircle } from 'lucide-react';
 
 function SingleView() {
   const { id } = useParams();
