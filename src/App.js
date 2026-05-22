@@ -54,7 +54,7 @@ export default function App() {
           <Routes>
             <Route path="/" element={<ListView />} />
             <Route path="/add" element={<AddView />} />
-            <Route path="/product/:id" element={<SingleView />} />
+            <Route path="/product/:id" element={<SingleView isAdmin={isAdmin} />} />
             <Route path="/settings" element={<SettingsView setIsAdmin={setIsAdmin} isAdmin={isAdmin} />} />
           </Routes>
         </main>

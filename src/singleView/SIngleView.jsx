@@ -14,7 +14,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-export function SingleView() {
+export function SingleView({isAdmin}) {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
@@ -84,15 +84,14 @@ export function SingleView() {
           <ArrowLeft size={16} /> Back to Catalog
         </Link>
         <div className="flex items-center gap-2">
-          
-          {/* Delete Action Trigger */}
+          {isAdmin && ( 
           <button 
             onClick={() => setOpenDeleteModal(true)}
             className="inline-flex items-center gap-2 border border-red-200 bg-red-50/50 hover:bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm"
           >
             Delete
           </button>
-
+          )}
           <button 
             onClick={handleShare} 
             className={`inline-flex items-center gap-2 border px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm ${
