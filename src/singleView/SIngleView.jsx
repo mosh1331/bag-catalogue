@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import {Link, useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import {  Share2, ArrowLeft, Image as ImageIcon, CheckCircle } from 'lucide-react';
+import { ArrowLeft, Share2, CheckCircle, Image as ImageIcon } from 'lucide-react';
 
-function SingleView() {
+// Lightbox Package Core Imports
+import Lightbox from 'yet-another-react-lightbox';
+import 'yet-another-react-lightbox/styles.css';
+
+// 1. Material UI Core Imports for the Modal
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+
+export function SingleView() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState(null);
@@ -11,9 +22,9 @@ function SingleView() {
   const [activeImage, setActiveImage] = useState(0);
   const [copied, setCopied] = useState(false);
   
-  // New States for Features
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  // States
+  const [isOpenLightbox, setIsOpenLightbox] = useState(false);
+  const [openDeleteModal, setOpenDeleteModal] = useState(false); // MUI State
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
@@ -48,25 +59,23 @@ function SingleView() {
     }
   };
 
-  // New Delete Implementation
   const handleDelete = async () => {
     setDeleting(true);
     try {
-      // 1. Optional: Extract paths and clean up associated objects from Supabase storage if needed
-      // For a simple personal workflow, we delete the database reference record directly:
       const { error } = await supabase.from('products').delete().eq('id', id);
       if (error) throw error;
-      
+      setOpenDeleteModal(false);
       navigate('/');
     } catch (err) {
       alert(`Could not delete item: ${err.message}`);
       setDeleting(false);
-      setShowDeleteConfirm(false);
     }
   };
 
   if (loading) return <div className="text-center py-12 text-slate-400 animate-pulse">Loading item...</div>;
   if (!product) return <div className="text-center py-12 text-red-400">Product does not exist or has been removed.</div>;
+
+  const lightboxSlides = product.images?.map(url => ({ src: url })) || [];
 
   return (
     <div className="space-y-6">
@@ -75,13 +84,15 @@ function SingleView() {
           <ArrowLeft size={16} /> Back to Catalog
         </Link>
         <div className="flex items-center gap-2">
+          
           {/* Delete Action Trigger */}
           <button 
-            onClick={() => setShowDeleteConfirm(true)}
+            onClick={() => setOpenDeleteModal(true)}
             className="inline-flex items-center gap-2 border border-red-200 bg-red-50/50 hover:bg-red-50 text-red-600 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm"
           >
             Delete
           </button>
+
           <button 
             onClick={handleShare} 
             className={`inline-flex items-center gap-2 border px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 shadow-sm ${
@@ -97,10 +108,9 @@ function SingleView() {
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 bg-white border border-slate-200/80 rounded-3xl p-5 md:p-8 shadow-sm">
-        {/* Media View Column */}
         <div className="space-y-4">
           <div 
-            onClick={() => product.images?.[activeImage] && setIsLightboxOpen(true)}
+            onClick={() => product.images?.length > 0 && setIsOpenLightbox(true)}
             className="aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 shadow-inner cursor-zoom-in group relative"
           >
             {product.images?.[activeImage] ? (
@@ -114,7 +124,7 @@ function SingleView() {
               <ImageIcon size={48} className="text-slate-300" />
             )}
           </div>
-          {/* Thumbnails Gallery Strip */}
+          
           {product.images && product.images.length > 1 && (
             <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
               {product.images.map((img, idx) => (
@@ -134,7 +144,6 @@ function SingleView() {
           )}
         </div>
 
-        {/* Metadata Copy Column */}
         <div className="flex flex-col justify-between py-2">
           <div className="space-y-6">
             <div>
@@ -157,81 +166,87 @@ function SingleView() {
         </div>
       </div>
 
-      {/* 1. LIGHTBOX FULLSCREEN COMPONENT */}
-      {isLightboxOpen && product.images?.[activeImage] && (
-        <div 
-          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex flex-col justify-center items-center p-4 animate-fade-in"
-          onClick={() => setIsLightboxOpen(false)}
-        >
-          <button 
-            onClick={() => setIsLightboxOpen(false)}
-            className="absolute top-4 right-4 text-white/70 hover:text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-xs font-bold tracking-wider transition-all"
-          >
-            CLOSE ESC
-          </button>
-          <div className="max-w-3xl max-h-[80vh] flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <img 
-              src={product.images[activeImage]} 
-              alt={product.title} 
-              className="max-w-full max-h-[80vh] object-contain rounded-xl shadow-2xl"
-            />
-          </div>
-          {/* Optional internal lightbox image gallery switching navigation */}
-          {product.images.length > 1 && (
-            <div className="flex gap-2 mt-6 overflow-x-auto max-w-md p-2 bg-white/5 backdrop-blur rounded-2xl" onClick={(e) => e.stopPropagation()}>
-              {product.images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setActiveImage(idx)}
-                  className={`w-12 h-12 rounded-lg overflow-hidden shrink-0 transition-all ${
-                    activeImage === idx ? 'border-2 border-white scale-95' : 'border border-white/20 opacity-40'
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+      {/* 2. MATERIAL UI DIALOG (MODAL) REPLACEMENT */}
+      <Dialog
+        open={openDeleteModal}
+        onClose={() => !deleting && setOpenDeleteModal(false)}
+        PaperProps={{
+          style: {
+            borderRadius: '16px',
+            padding: '8px',
+            fontFamily: 'inherit',
+            boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.25)'
+          }
+        }}
+      >
+        <DialogTitle style={{ fontWeight: '700', color: '#0f172a', fontSize: '1.125rem', paddingBottom: '8px' }}>
+          Permanently delete entry?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText style={{ color: '#64748b', fontSize: '0.875rem', lineHeight: '1.5' }}>
+            This will wipe "{product.title}" out of your cloud database lookup table logs permanently.
+          </DialogContentText>
+        </DialogContent>
+   <DialogActions style={{ padding: '20px', justifyContent: 'flex-end', gap: '12px', display: 'flex' }}>
+  <button
+    type="button"
+    disabled={deleting}
+    onClick={() => setOpenDeleteModal(false)}
+    style={{
+      padding: '10px 20px',
+      border: '1px solid #e2e8f0',
+      backgroundColor: '#ffffff',
+      color: '#475569',
+      fontWeight: '600',
+      borderRadius: '12px',
+      fontSize: '0.875rem',
+      cursor: 'pointer',
+      transition: 'all 0.2s'
+    }}
+    onMouseEnter={(e) => e.target.style.backgroundColor = '#f8fafc'}
+    onMouseLeave={(e) => e.target.style.backgroundColor = '#ffffff'}
+  >
+    Cancel
+  </button>
+  
+  <button
+    type="button"
+    disabled={deleting}
+    onClick={handleDelete}
+    style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '10px 20px',
+      backgroundColor: '#dc2626', // Solid red hex
+      color: '#ffffff',
+      fontWeight: '600',
+      borderRadius: '12px',
+      fontSize: '0.875rem',
+      border: 'none',
+      cursor: deleting ? 'not-allowed' : 'pointer',
+      opacity: deleting ? 0.5 : 1,
+      transition: 'all 0.2s',
+      boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+    }}
+    onMouseEnter={(e) => { if(!deleting) e.target.style.backgroundColor = '#b91c1c' }}
+    onMouseLeave={(e) => { if(!deleting) e.target.style.backgroundColor = '#dc2626' }}
+  >
+    {deleting ? 'Deleting...' : 'Confirm Delete'}
+  </button>
+</DialogActions>
+      </Dialog>
 
-      {/* 2. DELETE CONFIRMATION MODAL OVERLAY */}
-      {showDeleteConfirm && (
-        <div 
-          className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => !deleting && setShowDeleteConfirm(false)}
-        >
-          <div 
-            className="bg-white border border-slate-200 rounded-2xl p-6 max-w-sm w-full space-y-4 shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="space-y-1.5">
-              <h3 className="text-base font-bold text-slate-900 tracking-tight">Permanently delete entry?</h3>
-              <p className="text-slate-500 text-sm leading-relaxed">
-                This will wipe "{product.title}" out of your cloud database lookup table logs permanently.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 justify-end text-sm font-semibold pt-2">
-              <button
-                disabled={deleting}
-                onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl transition"
-              >
-                Cancel
-              </button>
-              <button
-                disabled={deleting}
-                onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl transition shadow-sm disabled:opacity-50"
-              >
-                {deleting ? 'Deleting...' : 'Confirm Delete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Lightbox Module */}
+      <Lightbox
+        open={isOpenLightbox}
+        close={() => setIsOpenLightbox(false)}
+        index={activeImage}
+        slides={lightboxSlides}
+        on={{ view: ({ index }) => setActiveImage(index) }}
+      />
     </div>
   );
 }
 
-export default SingleView
+export default SingleView;

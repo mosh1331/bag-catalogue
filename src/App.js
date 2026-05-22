@@ -31,7 +31,7 @@ export default function App() {
           </nav>
         </header>
 
-        <main className="max-w-4xl mx-auto p-4 pb-24">
+       <main className="max-w-4xl mx-auto p-4 pb-24 isolate">
           <Routes>
             <Route path="/" element={<ListView />} />
             <Route path="/add" element={<AddView />} />
