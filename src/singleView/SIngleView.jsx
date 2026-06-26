@@ -38,13 +38,30 @@ export function SingleView({isAdmin}) {
     fetchItem();
   }, [id]);
 
-  const handleShare = async () => {
+ const handleShare = async () => {
     if (!product) return;
+    
     const sharePayload = {
       title: product.title,
-      text: `Check out the ${product.title} catalog details.`,
+      text: `Check out the ${product.title} product details.`,
       url: window.location.href
     };
+
+    // If native sharing is supported and a product image exists, try converting it to a File object
+    if (navigator.share && product.images?.[0]) {
+      try {
+        const response = await fetch(product.images[0]);
+        const blob = await response.blob();
+        const extension = product.images[0].split('.').pop().split('?')[0] || 'jpeg';
+        const imageFile = new File([blob], `product-image.${extension}`, { type: blob.type });
+
+        if (navigator.canShare && navigator.canShare({ files: [imageFile] })) {
+          sharePayload.files = [imageFile];
+        }
+      } catch (imageFetchError) {
+        console.warn('Failed to fetch image for sharing, falling back to text-only share', imageFetchError);
+      }
+    }
 
     if (navigator.share) {
       try {
