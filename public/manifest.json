@@ -1,21 +1,27 @@
 {
-  "short_name": "LeuTote",
-  "name": "Leu Tote PWA Catalog",
+  "short_name": "Leu Tote",
+  "name": "Leu Tote Catelogue",
   "icons": [
     {
-      "src": "pwa-192.png",
-      "type": "image/png",
-      "sizes": "192x192"
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
     },
     {
-      "src": "pwa-512.png",
+      "src": "logo192.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
   "display": "standalone",
-  "orientation": "portrait"
+  "theme_color": "#0f172a",
+  "background_color": "#ffffff"
 }
