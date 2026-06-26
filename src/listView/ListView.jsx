@@ -3,16 +3,32 @@ import {  Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { Image as ImageIcon, Filter } from 'lucide-react';
 
+// Simple in-memory cache outside the component to persist data between page navigations
+let productsCache = null;
+
 function ListView() {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  // Initialize state with cached data if it exists, otherwise empty array
+  const [products, setProducts] = useState(productsCache || []);
+  // Skip the loading screen if we already have cached data to show
+  const [loading, setLoading] = useState(!productsCache);
   const [activeFilter, setActiveFilter] = useState('All');
-  const [categories, setCategories] = useState([]);
+  
+  // Initialize categories from cache if available
+  const [categories, setCategories] = useState(() => {
+    if (productsCache) {
+      return ['All', ...new Set(productsCache.map(p => p.category))];
+    }
+    return [];
+  });
 
   useEffect(() => {
     async function fetchCatalog() {
       const { data, error } = await supabase.from('products').select('*').order('created_at', { ascending: false });
       if (!error && data) {
+        // Update the global cache
+        productsCache = data;
+        
+        // Update states smoothly in the background or on initial load
         setProducts(data);
         const uniqueCategories = ['All', ...new Set(data.map(p => p.category))];
         setCategories(uniqueCategories);
